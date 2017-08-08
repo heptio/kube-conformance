@@ -23,13 +23,13 @@ spec:
   - name: conformance-container
     image: gcr.io/heptio-images/kube-conformance:latest
     imagePullPolicy: IfNotPresent
-    env: 
+    env:
     - name: E2E_FOCUS
       value: "Pods should be submitted and removed"
     volumeMounts:
     - name: output-volume
       mountPath: /tmp/results
-  volumes: 
+  volumes:
   - name: output-volume
     hostPath:
       path: /tmp/results

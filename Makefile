@@ -19,39 +19,37 @@
 TARGET = kube-conformance
 GOTARGET = github.com/heptio/$(TARGET)
 REGISTRY ?= gcr.io/heptio-images
-KVER = v1.7.0
+KVER = v1.7.3
 IMAGE = $(REGISTRY)/$(BIN)
 DOCKER ?= docker
 DIR := ${CURDIR}
-TEST = go test $(TEST_PKGS) $(TESTARGS)
+
+.PHONY: all container getbins clean
 
 all: container
 
-e2e.test: _cache/kubernetes/platforms/linux/amd64
-	cp $</e2e.test $@
-kubectl: _cache/kubernetes/platforms/linux/amd64
-	cp $</kubectl $@
+e2e.test: getbins
+kubectl: getbins
 
-_cache/kubernetes/platforms/linux/amd64: _cache/kubernetes.tar.gz
-	tar -C _cache -xzf $<
-	cd _cache && KUBERNETES_DOWNLOAD_TESTS=true KUBERNETES_SKIP_CONFIRM=true ./kubernetes/cluster/get-kube-binaries.sh
-	# Bump the timestamp of this directory to avoid remaking it
+getbins: | _cache/.getbins.$(KVER).timestamp
+
+_cache/.getbins.$(KVER).timestamp:
+	mkdir -p _cache/$(KVER)
+	curl -L -o _cache/$(KVER)/kubernetes.tar.gz http://gcsweb.k8s.io/gcs/kubernetes-release/release/$(KVER)/kubernetes.tar.gz
+	tar -C _cache/$(KVER) -xzf _cache/$(KVER)/kubernetes.tar.gz
+	cd _cache/$(KVER) && KUBERNETES_DOWNLOAD_TESTS=true KUBERNETES_SKIP_CONFIRM=true ./kubernetes/cluster/get-kube-binaries.sh
+	mv _cache/$(KVER)/kubernetes/platforms/linux/amd64/e2e.test ./
+	mv _cache/$(KVER)/kubernetes/platforms/linux/amd64/kubectl ./
+	rm -rf _cache/$(KVER)
 	touch $@
-
-_cache/kubernetes.tar.gz: _cache
-	curl -L -o $@ http://gcsweb.k8s.io/gcs/kubernetes-release/release/$(KVER)/kubernetes.tar.gz
-
-_cache:
-	mkdir -p _cache
 
 container: e2e.test kubectl
 	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest -t $(REGISTRY)/$(TARGET):$(KVER) .
 
 push:
-	gcloud docker -- push $(REGISTRY)/$(TARGET):latest $(REGISTRY)/$(TARGET):$(KVER)
-
-.PHONY: all container
+	$(DOCKER) push $(REGISTRY)/$(TARGET):latest
+	$(DOCKER) push $(REGISTRY)/$(TARGET):$(KVER)
 
 clean:
-	rm -rf _cache
+	rm -rf _cache e2e.test kubectl
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest $(REGISTRY)/$(TARGET):$(KVER) || true
