@@ -1,0 +1,4 @@
+# Build artifacts
+/_cache
+/e2e.test
+/kubectl
