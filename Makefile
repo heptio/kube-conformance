@@ -53,15 +53,15 @@ _cache/.getbins.$(kube_version_full).timestamp: clean
 container: e2e.test kubectl
 	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest \
 	                -t $(REGISTRY)/$(TARGET):v$(kube_version) \
-	                -t $(REGISTRY)/$(TARGET):v$(kube_version_full) .
+	                -t $(REGISTRY)/$(TARGET):$(kube_version_full) .
 
 push:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):latest
 	$(DOCKER) push $(REGISTRY)/$(TARGET):v$(kube_version)
-	$(DOCKER) push $(REGISTRY)/$(TARGET):v$(kube_version_full)
+	$(DOCKER) push $(REGISTRY)/$(TARGET):$(kube_version_full)
 
 clean:
 	rm -rf _cache e2e.test kubectl cluster
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest \
 	              $(REGISTRY)/$(TARGET):v$(kube_version) \
-		      $(REGISTRY)/$(TARGET):v$(kube_version_full) || true
+		      $(REGISTRY)/$(TARGET):$(kube_version_full) || true
