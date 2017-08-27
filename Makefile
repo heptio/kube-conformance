@@ -19,7 +19,8 @@
 TARGET = kube-conformance
 GOTARGET = github.com/heptio/$(TARGET)
 REGISTRY ?= gcr.io/heptio-images
-KUBE_VERSION ?= 1.7
+latest_stable = 1.7
+KUBE_VERSION ?= $(latest_stable)
 kube_version = $(subst v,,$(KUBE_VERSION))
 kube_version_full = $(shell curl -Ss https://storage.googleapis.com/kubernetes-release/release/stable-$(kube_version).txt)
 IMAGE = $(REGISTRY)/$(BIN)
@@ -51,14 +52,18 @@ _cache/.getbins.$(kube_version_full).timestamp: clean
 	touch $@
 
 container: e2e.test kubectl
-	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest \
-	                -t $(REGISTRY)/$(TARGET):v$(kube_version) \
+	$(DOCKER) build -t $(REGISTRY)/$(TARGET):v$(kube_version) \
 	                -t $(REGISTRY)/$(TARGET):$(kube_version_full) .
+	if [ "$(kube_version)" = "$(latest_stable)" ]; then \
+	  $(DOCKER) tag $(REGISTRY)/$(TARGET):v$(kube_version) $(REGISTRY)/$(TARGET):latest; \
+	fi
 
 push:
-	$(DOCKER) push $(REGISTRY)/$(TARGET):latest
 	$(DOCKER) push $(REGISTRY)/$(TARGET):v$(kube_version)
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(kube_version_full)
+	if [ "$(kube_version)" = "$(latest_stable)" ]; then \
+	  $(DOCKER) push $(REGISTRY)/$(TARGET):latest; \
+	fi
 
 clean:
 	rm -rf _cache e2e.test kubectl cluster
