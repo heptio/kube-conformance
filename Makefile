@@ -21,7 +21,7 @@ GOTARGET = github.com/heptio/$(TARGET)
 REGISTRY ?= gcr.io/heptio-images
 KUBE_VERSION ?= 1.7
 kube_version = $(subst v,,$(KUBE_VERSION))
-kube_version_full = $(shell curl https://storage.googleapis.com/kubernetes-release/release/stable-$(kube_version).txt)
+kube_version_full = $(shell curl -Ss https://storage.googleapis.com/kubernetes-release/release/stable-$(kube_version).txt)
 IMAGE = $(REGISTRY)/$(BIN)
 in_docker_group=$(filter docker,$(shell groups))                                                                                                                                                                     
 is_root=$(filter 0,$(shell id -u))
@@ -39,7 +39,7 @@ getbins: | _cache/.getbins.$(kube_version_full).timestamp
 
 _cache/.getbins.$(kube_version_full).timestamp: clean
 	mkdir -p _cache/$(kube_version_full)
-	curl -L -o _cache/$(kube_version_full)/kubernetes.tar.gz http://gcsweb.k8s.io/gcs/kubernetes-release/release/$(kube_version_full)/kubernetes.tar.gz
+	curl -SsL -o _cache/$(kube_version_full)/kubernetes.tar.gz http://gcsweb.k8s.io/gcs/kubernetes-release/release/$(kube_version_full)/kubernetes.tar.gz
 	tar -C _cache/$(kube_version_full) -xzf _cache/$(kube_version_full)/kubernetes.tar.gz
 	cd _cache/$(kube_version_full) && KUBE_VERSION="${kube_version_full}" \
 	                                  KUBERNETES_DOWNLOAD_TESTS=true \
