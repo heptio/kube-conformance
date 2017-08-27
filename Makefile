@@ -19,9 +19,13 @@
 TARGET = kube-conformance
 GOTARGET = github.com/heptio/$(TARGET)
 REGISTRY ?= gcr.io/heptio-images
-KVER = v1.7.3
+KUBE_VERSION ?= 1.7
+kube_version = $(subst v,,$(KUBE_VERSION))
+kube_version_full = $(shell curl https://storage.googleapis.com/kubernetes-release/release/stable-$(kube_version).txt)
 IMAGE = $(REGISTRY)/$(BIN)
-DOCKER ?= docker
+in_docker_group=$(filter docker,$(shell groups))                                                                                                                                                                     
+is_root=$(filter 0,$(shell id -u))
+DOCKER?=$(if $(or $(in_docker_group),$(is_root)),docker,sudo docker)
 DIR := ${CURDIR}
 
 .PHONY: all container getbins clean
@@ -31,25 +35,33 @@ all: container
 e2e.test: getbins
 kubectl: getbins
 
-getbins: | _cache/.getbins.$(KVER).timestamp
+getbins: | _cache/.getbins.$(kube_version_full).timestamp
 
-_cache/.getbins.$(KVER).timestamp:
-	mkdir -p _cache/$(KVER)
-	curl -L -o _cache/$(KVER)/kubernetes.tar.gz http://gcsweb.k8s.io/gcs/kubernetes-release/release/$(KVER)/kubernetes.tar.gz
-	tar -C _cache/$(KVER) -xzf _cache/$(KVER)/kubernetes.tar.gz
-	cd _cache/$(KVER) && KUBERNETES_DOWNLOAD_TESTS=true KUBERNETES_SKIP_CONFIRM=true ./kubernetes/cluster/get-kube-binaries.sh
-	mv _cache/$(KVER)/kubernetes/platforms/linux/amd64/e2e.test ./
-	mv _cache/$(KVER)/kubernetes/platforms/linux/amd64/kubectl ./
-	rm -rf _cache/$(KVER)
+_cache/.getbins.$(kube_version_full).timestamp: clean
+	mkdir -p _cache/$(kube_version_full)
+	curl -L -o _cache/$(kube_version_full)/kubernetes.tar.gz http://gcsweb.k8s.io/gcs/kubernetes-release/release/$(kube_version_full)/kubernetes.tar.gz
+	tar -C _cache/$(kube_version_full) -xzf _cache/$(kube_version_full)/kubernetes.tar.gz
+	cd _cache/$(kube_version_full) && KUBE_VERSION="${kube_version_full}" \
+	                                  KUBERNETES_DOWNLOAD_TESTS=true \
+					  KUBERNETES_SKIP_CONFIRM=true ./kubernetes/cluster/get-kube-binaries.sh
+	mv _cache/$(kube_version_full)/kubernetes/cluster ./
+	mv _cache/$(kube_version_full)/kubernetes/platforms/linux/amd64/e2e.test ./
+	mv _cache/$(kube_version_full)/kubernetes/platforms/linux/amd64/kubectl ./
+	rm -rf _cache/$(kube_version_full)
 	touch $@
 
 container: e2e.test kubectl
-	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest -t $(REGISTRY)/$(TARGET):$(KVER) .
+	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest \
+	                -t $(REGISTRY)/$(TARGET):v$(kube_version) \
+	                -t $(REGISTRY)/$(TARGET):v$(kube_version_full) .
 
 push:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):latest
-	$(DOCKER) push $(REGISTRY)/$(TARGET):$(KVER)
+	$(DOCKER) push $(REGISTRY)/$(TARGET):v$(kube_version)
+	$(DOCKER) push $(REGISTRY)/$(TARGET):v$(kube_version_full)
 
 clean:
-	rm -rf _cache e2e.test kubectl
-	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest $(REGISTRY)/$(TARGET):$(KVER) || true
+	rm -rf _cache e2e.test kubectl cluster
+	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest \
+	              $(REGISTRY)/$(TARGET):v$(kube_version) \
+		      $(REGISTRY)/$(TARGET):v$(kube_version_full) || true
