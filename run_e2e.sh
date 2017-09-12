@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "/usr/local/bin/e2e.test --ginkgo.skip=\"${E2E_SKIP}\" --ginkgo.focus=\"${E2E_FOCUS}\" --provider=\"${E2E_PROVIDER}\" --report-dir=\"${RESULTS_DIR}\" --ginkgo.noColor=true"
-/usr/local/bin/e2e.test --ginkgo.skip="${E2E_SKIP}" --ginkgo.focus="${E2E_FOCUS}" --provider="${E2E_PROVIDER}" --report-dir="${RESULTS_DIR}" --ginkgo.noColor=true | tee ${RESULTS_DIR}/e2e.log
+echo "/usr/local/bin/e2e.test --repo-root=/kubernetes --ginkgo.skip=\"${E2E_SKIP}\" --ginkgo.focus=\"${E2E_FOCUS}\" --provider=\"${E2E_PROVIDER}\" --report-dir=\"${RESULTS_DIR}\" --ginkgo.noColor=true"
+/usr/local/bin/e2e.test --repo-root=/kubernetes --ginkgo.skip="${E2E_SKIP}" --ginkgo.focus="${E2E_FOCUS}" --provider="${E2E_PROVIDER}" --report-dir="${RESULTS_DIR}" --ginkgo.noColor=true | tee ${RESULTS_DIR}/e2e.log
 # tar up the results for transmission back
 cd ${RESULTS_DIR}
 tar -czf e2e.tar.gz * 
