@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+echo "/usr/local/bin/kubectl version"
+/usr/local/bin/kubectl version | tee ${RESULTS_DIR}/version.txt
 echo "/usr/local/bin/e2e.test --repo-root=/kubernetes --ginkgo.skip=\"${E2E_SKIP}\" --ginkgo.focus=\"${E2E_FOCUS}\" --provider=\"${E2E_PROVIDER}\" --report-dir=\"${RESULTS_DIR}\" --kubeconfig=\"${KUBECONFIG}\" --ginkgo.noColor=true"
 /usr/local/bin/e2e.test --repo-root=/kubernetes --ginkgo.skip="${E2E_SKIP}" --ginkgo.focus="${E2E_FOCUS}" --provider="${E2E_PROVIDER}" --report-dir="${RESULTS_DIR}" --kubeconfig="${KUBECONFIG}" --ginkgo.noColor=true | tee ${RESULTS_DIR}/e2e.log
 # tar up the results for transmission back
