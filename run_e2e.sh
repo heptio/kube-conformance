@@ -14,10 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# tar up the results for transmission back
+finish () {
+    cd "${RESULTS_DIR}"
+    tar -czf e2e.tar.gz ./*
+    # mark the done file as a termination notice.
+    echo -n "${RESULTS_DIR}/e2e.tar.gz" > "${RESULTS_DIR}/done"
+}
+
+# Write out the done file no matter what happens.
+trap finish EXIT
+
 echo "/usr/local/bin/e2e.test --repo-root=/kubernetes --ginkgo.skip=\"${E2E_SKIP}\" --ginkgo.focus=\"${E2E_FOCUS}\" --provider=\"${E2E_PROVIDER}\" --report-dir=\"${RESULTS_DIR}\" --kubeconfig=\"${KUBECONFIG}\" --ginkgo.noColor=true"
 /usr/local/bin/e2e.test --repo-root=/kubernetes --ginkgo.skip="${E2E_SKIP}" --ginkgo.focus="${E2E_FOCUS}" --provider="${E2E_PROVIDER}" --report-dir="${RESULTS_DIR}" --kubeconfig="${KUBECONFIG}" --ginkgo.noColor=true | tee ${RESULTS_DIR}/e2e.log
-# tar up the results for transmission back
-cd ${RESULTS_DIR}
-tar -czf e2e.tar.gz * 
-# mark the done file as a termination notice.
-echo -n ${RESULTS_DIR}/e2e.tar.gz > ${RESULTS_DIR}/done 
