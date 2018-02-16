@@ -30,6 +30,7 @@ ENV E2E_FOCUS="Conformance"
 # NOTE: kubectl tests are temporarily disabled due to the fact that they do not use the in-cluster 
 # configuration atm.  Fixes will be made upstream to resolve.
 ENV E2E_SKIP="Alpha|Disruptive|Feature|Flaky|Kubectl"
+ENV NODE_E2E_SKIP="\[Flaky\]|\[Slow\]|\[Serial\]"
 ENV E2E_PROVIDER="local"
 ENV RESULTS_DIR="/tmp/results"
 
