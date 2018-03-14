@@ -32,6 +32,7 @@ ENV E2E_FOCUS="Conformance"
 # configuration atm.  Fixes will be made upstream to resolve.
 ENV E2E_SKIP="Alpha|Disruptive|Feature|Flaky|Kubectl"
 ENV E2E_PROVIDER="local"
+ENV E2E_PARALLEL="1"
 ENV RESULTS_DIR="/tmp/results"
 
 CMD ["/bin/sh", "-c", "/run_e2e.sh"]
