@@ -24,8 +24,15 @@ shutdown () {
 # We get the TERM from kubernetes and handle it gracefully
 trap shutdown TERM
 
-echo "/usr/local/bin/e2e.test --disable-log-dump --repo-root=/kubernetes --ginkgo.skip=\"${E2E_SKIP}\" --ginkgo.focus=\"${E2E_FOCUS}\" --provider=\"${E2E_PROVIDER}\" --report-dir=\"${RESULTS_DIR}\" --kubeconfig=\"${KUBECONFIG}\" --ginkgo.noColor=true"
-/usr/local/bin/e2e.test --disable-log-dump --repo-root=/kubernetes --ginkgo.skip="${E2E_SKIP}" --ginkgo.focus="${E2E_FOCUS}" --provider="${E2E_PROVIDER}" --report-dir="${RESULTS_DIR}" --kubeconfig="${KUBECONFIG}" --ginkgo.noColor=true | tee ${RESULTS_DIR}/e2e.log &
+E2E_PARALLEL=${E2E_PARALLEL:-n}
+GINKGO_PARALLEL_ARGS=()
+case ${E2E_PARALLEL} in
+    'y'|'Y')           GINKGO_PARALLEL_ARGS+=("--ginkgo.parallel.total=\"25\"") ;;
+    [1-9]|[1-9][0-9]*) GINKGO_PARALLEL_ARGS+=("--ginkgo.parallel.total=\"${E2E_PARALLEL}\"") ;;
+esac
+
+echo "/usr/local/bin/e2e.test --disable-log-dump --repo-root=/kubernetes --ginkgo.skip=\"${E2E_SKIP}\" --ginkgo.focus=\"${E2E_FOCUS}\" --provider=\"${E2E_PROVIDER}\" --report-dir=\"${RESULTS_DIR}\" --kubeconfig=\"${KUBECONFIG}\" --ginkgo.noColor=true ${GINKGO_PARALLEL_ARGS[@]}"
+/usr/local/bin/e2e.test --disable-log-dump --repo-root=/kubernetes --ginkgo.skip="${E2E_SKIP}" --ginkgo.focus="${E2E_FOCUS}" --provider="${E2E_PROVIDER}" --report-dir="${RESULTS_DIR}" --kubeconfig="${KUBECONFIG}" --ginkgo.noColor=true ${GINKGO_PARALLEL_ARGS[@]} | tee ${RESULTS_DIR}/e2e.log &
 # $! is the pid of tee, not e2e.test
 PID="$(jobs -p)"
 wait "${PID}"
