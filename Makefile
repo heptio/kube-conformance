@@ -39,7 +39,7 @@ ginkgo: getbins
 
 getbins: | _cache/.getbins.$(kube_version_full).timestamp
 
-_cache/.getbins.$(kube_version_full).timestamp: clean
+_cache/.getbins.$(kube_version_full).timestamp:
 	mkdir -p _cache/$(kube_version_full)
 	curl -SsL -o _cache/$(kube_version_full)/kubernetes.tar.gz http://gcsweb.k8s.io/gcs/kubernetes-release/release/$(kube_version_full)/kubernetes.tar.gz
 	tar -C _cache/$(kube_version_full) -xzf _cache/$(kube_version_full)/kubernetes.tar.gz
