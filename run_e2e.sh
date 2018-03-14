@@ -24,9 +24,15 @@ shutdown () {
 # We get the TERM from kubernetes and handle it gracefully
 trap shutdown TERM
 
-echo "/usr/local/bin/e2e.test --disable-log-dump --repo-root=/kubernetes --ginkgo.skip=\"${E2E_SKIP}\" --ginkgo.focus=\"${E2E_FOCUS}\" --provider=\"${E2E_PROVIDER}\" --report-dir=\"${RESULTS_DIR}\" --kubeconfig=\"${KUBECONFIG}\" --ginkgo.noColor=true"
-/usr/local/bin/e2e.test --disable-log-dump --repo-root=/kubernetes --ginkgo.skip="${E2E_SKIP}" --ginkgo.focus="${E2E_FOCUS}" --provider="${E2E_PROVIDER}" --report-dir="${RESULTS_DIR}" --kubeconfig="${KUBECONFIG}" --ginkgo.noColor=true | tee ${RESULTS_DIR}/e2e.log &
-# $! is the pid of tee, not e2e.test
+ginkgo_args=(
+    "--focus=${E2E_FOCUS}"
+    "--skip=${E2E_SKIP}"
+    "--noColor=true"
+)
+
+echo "/usr/local/bin/ginkgo ${ginkgo_args[@]} /usr/local/bin/e2e.test -- --disable-log-dump --repo-root=/kubernetes --provider=\"${E2E_PROVIDER}\" --report-dir=\"${RESULTS_DIR}\" --kubeconfig=\"${KUBECONFIG}\""
+/usr/local/bin/ginkgo "${ginkgo_args[@]}" /usr/local/bin/e2e.test -- --disable-log-dump --repo-root=/kubernetes --provider="${E2E_PROVIDER}" --report-dir="${RESULTS_DIR}" --kubeconfig="${KUBECONFIG}" | tee ${RESULTS_DIR}/e2e.log &
+# $! is the pid of tee, not ginkgo
 PID="$(jobs -p)"
 wait "${PID}"
 cd "${RESULTS_DIR}" || exit
