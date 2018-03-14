@@ -20,6 +20,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     ca-certificates \
     && rm -rf /var/cache/apt/* \
     && rm -rf /var/lib/apt/lists/*
+COPY ginkgo /usr/local/bin/
 COPY e2e.test /usr/local/bin/
 COPY kubectl /usr/local/bin/
 COPY run_e2e.sh /run_e2e.sh
