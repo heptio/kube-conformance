@@ -26,10 +26,10 @@ COPY run_e2e.sh /run_e2e.sh
 COPY cluster /kubernetes/cluster
 WORKDIR /usr/local/bin
 
-ENV E2E_FOCUS="Conformance"
+ENV E2E_FOCUS="\[Conformance\]"
 # NOTE: kubectl tests are temporarily disabled due to the fact that they do not use the in-cluster 
 # configuration atm.  Fixes will be made upstream to resolve.
-ENV E2E_SKIP="Alpha|Disruptive|Feature|Flaky|Kubectl"
+ENV E2E_SKIP="Alpha|Kubectl|\[(Disruptive|Feature:[^\]]+|Flaky)\]"
 ENV E2E_PROVIDER="local"
 ENV RESULTS_DIR="/tmp/results"
 
