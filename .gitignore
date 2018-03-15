@@ -3,3 +3,4 @@
 /e2e.test
 /kubectl
 /cluster
+/ginkgo

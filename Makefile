@@ -35,23 +35,24 @@ all: container
 
 e2e.test: getbins
 kubectl: getbins
+ginkgo: getbins
 
 getbins: | _cache/.getbins.$(kube_version_full).timestamp
 
-_cache/.getbins.$(kube_version_full).timestamp: clean
+_cache/.getbins.$(kube_version_full).timestamp:
 	mkdir -p _cache/$(kube_version_full)
-	curl -SsL -o _cache/$(kube_version_full)/kubernetes.tar.gz http://gcsweb.k8s.io/gcs/kubernetes-release/release/$(kube_version_full)/kubernetes.tar.gz
-	tar -C _cache/$(kube_version_full) -xzf _cache/$(kube_version_full)/kubernetes.tar.gz
+	
+	curl -SsL http://gcsweb.k8s.io/gcs/kubernetes-release/release/$(kube_version_full)/kubernetes.tar.gz | tar -C _cache/$(kube_version_full) -xz
 	cd _cache/$(kube_version_full) && KUBE_VERSION="${kube_version_full}" \
 	                                  KUBERNETES_DOWNLOAD_TESTS=true \
 					  KUBERNETES_SKIP_CONFIRM=true ./kubernetes/cluster/get-kube-binaries.sh
 	mv _cache/$(kube_version_full)/kubernetes/cluster ./
 	mv _cache/$(kube_version_full)/kubernetes/platforms/linux/amd64/e2e.test ./
+	mv _cache/$(kube_version_full)/kubernetes/platforms/linux/amd64/ginkgo ./
 	mv _cache/$(kube_version_full)/kubernetes/platforms/linux/amd64/kubectl ./
-	rm -rf _cache/$(kube_version_full)
 	touch $@
 
-container: e2e.test kubectl
+container: e2e.test kubectl ginkgo
 	$(DOCKER) build -t $(REGISTRY)/$(TARGET):v$(kube_version) \
 	                -t $(REGISTRY)/$(TARGET):$(kube_version_full) .
 	if [ "$(kube_version)" = "$(latest_stable)" ]; then \
@@ -66,7 +67,7 @@ push:
 	fi
 
 clean:
-	rm -rf _cache e2e.test kubectl cluster
+	rm -rf _cache e2e.test kubectl cluster ginkgo
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest \
 	              $(REGISTRY)/$(TARGET):v$(kube_version) \
 		      $(REGISTRY)/$(TARGET):$(kube_version_full) || true
