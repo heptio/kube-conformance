@@ -14,7 +14,7 @@
 # limitations under the License.
 
 FROM buildpack-deps:jessie-scm
-MAINTAINER Timothy St. Clair "tstclair@heptio.com"  
+MAINTAINER Timothy St. Clair "tstclair@heptio.com"
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
     ca-certificates \
@@ -28,11 +28,11 @@ COPY cluster /kubernetes/cluster
 WORKDIR /usr/local/bin
 
 ENV E2E_FOCUS="\[Conformance\]"
-# NOTE: kubectl tests are temporarily disabled due to the fact that they do not use the in-cluster 
+# NOTE: kubectl tests are temporarily disabled due to the fact that they do not use the in-cluster
 # configuration atm.  Fixes will be made upstream to resolve.
 ENV E2E_SKIP="Alpha|Kubectl|\[(Disruptive|Feature:[^\]]+|Flaky)\]"
 ENV E2E_PROVIDER="local"
 ENV E2E_PARALLEL="1"
 ENV RESULTS_DIR="/tmp/results"
 
-CMD ["/bin/sh", "-c", "/run_e2e.sh"]
+CMD [ "/bin/bash", "-c", "/run_e2e.sh" ]
