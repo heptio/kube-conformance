@@ -14,11 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# tar up the results for transmission back
+# Shutdown the tests gracefully then save the results
 shutdown () {
-    echo "sending TERM to ${PID}"
-    kill -s INT "${PID}"
-    wait "${PID}"
+    E2E_SUITE_PID=$(pgrep e2e.test)
+    echo "sending TERM to ${E2E_SUITE_PID}"
+    kill -s TERM "${E2E_SUITE_PID}"
+
+    # Kind of a hack to wait for this pid to finish.
+    # Since it's not a child of this shell we cannot use wait.
+    tail --pid ${E2E_SUITE_PID} -f /dev/null
+    saveResults
+}
+
+saveResults() {
+    cd "${RESULTS_DIR}" || exit
+    tar -czf e2e.tar.gz ./*
+    # mark the done file as a termination notice.
+    echo -n "${RESULTS_DIR}/e2e.tar.gz" > "${RESULTS_DIR}/done"
 }
 
 # We get the TERM from kubernetes and handle it gracefully
@@ -38,9 +50,5 @@ esac
 echo "/usr/local/bin/ginkgo ${ginkgo_args[@]} /usr/local/bin/e2e.test -- --disable-log-dump --repo-root=/kubernetes --provider=\"${E2E_PROVIDER}\" --report-dir=\"${RESULTS_DIR}\" --kubeconfig=\"${KUBECONFIG}\""
 /usr/local/bin/ginkgo "${ginkgo_args[@]}" /usr/local/bin/e2e.test -- --disable-log-dump --repo-root=/kubernetes --provider="${E2E_PROVIDER}" --report-dir="${RESULTS_DIR}" --kubeconfig="${KUBECONFIG}" | tee ${RESULTS_DIR}/e2e.log &
 # $! is the pid of tee, not ginkgo
-PID="$(jobs -p)"
-wait "${PID}"
-cd "${RESULTS_DIR}" || exit
-tar -czf e2e.tar.gz ./*
-# mark the done file as a termination notice.
-echo -n "${RESULTS_DIR}/e2e.tar.gz" > "${RESULTS_DIR}/done"
+wait $(pgrep ginkgo)
+saveResults
