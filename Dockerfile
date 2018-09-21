@@ -30,7 +30,7 @@ WORKDIR /usr/local/bin
 ENV E2E_FOCUS="\[Conformance\]"
 # NOTE: kubectl tests are temporarily disabled due to the fact that they do not use the in-cluster
 # configuration atm.  Fixes will be made upstream to resolve.
-ENV E2E_SKIP="Alpha|Kubectl|\[(Disruptive|Feature:[^\]]+|Flaky)\]"
+ENV E2E_SKIP="Alpha|\[(Disruptive|Feature:[^\]]+|Flaky)\]"
 ENV E2E_PROVIDER="local"
 ENV E2E_PARALLEL="1"
 ENV RESULTS_DIR="/tmp/results"

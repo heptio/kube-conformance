@@ -19,7 +19,7 @@
 TARGET = kube-conformance
 GOTARGET = github.com/heptio/$(TARGET)
 REGISTRY ?= gcr.io/heptio-images
-latest_stable = 1.11
+latest_stable = 1.12
 KUBE_VERSION ?= $(latest_stable)
 kube_version = $(subst v,,$(KUBE_VERSION))
 kube_version_full = $(shell curl -Ss https://storage.googleapis.com/kubernetes-release/release/stable-$(kube_version).txt)
