@@ -13,8 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM buildpack-deps:jessie-scm
+# Get qemu-user-static
+ARG IMAGEARCH
+FROM alpine:3.9.2 as qemu
+RUN apk add --no-cache curl
+ARG QEMUVERSION=2.9.1
+ARG QEMUARCH
+
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+
+RUN curl -fsSL https://github.com/multiarch/qemu-user-static/releases/download/v${QEMUVERSION}/qemu-${QEMUARCH}-static.tar.gz | tar zxvf - -C /usr/bin
+RUN chmod +x /usr/bin/qemu-*
+
+FROM ${IMAGEARCH}buildpack-deps:stable-scm
 MAINTAINER Timothy St. Clair "tstclair@heptio.com"
+
+ARG QEMUARCH
+COPY --from=qemu /usr/bin/qemu-${QEMUARCH}-static /usr/bin/
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
     ca-certificates \
@@ -35,4 +50,5 @@ ENV E2E_PROVIDER="local"
 ENV E2E_PARALLEL="1"
 ENV RESULTS_DIR="/tmp/results"
 
+RUN rm -f /usr/bin/qemu-${QEMUARCH}-static
 CMD [ "/bin/bash", "-c", "/run_e2e.sh" ]
